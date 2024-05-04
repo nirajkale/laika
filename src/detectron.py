@@ -112,6 +112,8 @@ class BaseDetector(ABC):
         """
         bboxes: [x_min, y_min, x_max, y_max, probability, cls_id] format coordinates.
         """
+        if isinstance(bboxes, torch.Tensor):
+            bboxes = bboxes.cpu().numpy()
         bbox_collection = []
         image_h, image_w, _ = image.shape
         fontScale = 0.5
@@ -274,6 +276,7 @@ class TensorRTDetector(BaseDetector):
                 name, dtype, shape, data, int(data.data_ptr())
             )
             self.logger.debug(f"Binding: {name} | dtype: {dtype} | shape: {shape}")
+        self.binding_addrs = OrderedDict((n, d.ptr) for n, d in self.bindings.items())
         self.context = model.create_execution_context()
         self.logger.debug("Tensorrt engine formalities completed")
 
@@ -293,12 +296,13 @@ class TensorRTDetector(BaseDetector):
 if __name__ == "__main__":
 
     environ["LOG_LEVEL"] = "DEBUG"
-    model_path = r"models/best.onnx"
+    model_path = r"/home/niraj/projects/laika/models/det-5n-half.engine"
     classes = ["face", "human"]
     sample_image = r"data/samples/9.jpg"
     output_file = r"data/outputs/9_op.jpg"
     # Create an instance of ONNXDetector
-    detector = ONNXDetector(model_path=model_path, classes=classes, device="cpu")
+    # detector = ONNXDetector(model_path=model_path, classes=classes, device="cpu")
+    detector = TensorRTDetector(model_path=model_path, classes=classes, device=0)
     img1, detections = detector.predict(source=sample_image, isBGR=True)
     detector.save_np_image(img1, output_file)
     detector.save_np_image(img1, output_file)

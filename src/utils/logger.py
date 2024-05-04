@@ -29,7 +29,7 @@ class LogLevel(Enum):
 
 UTF_EMOJI_MAP = {
     LogLevel.DEBUG: "🐞",
-    LogLevel.INFO: "🔵",
+    LogLevel.INFO: "ℹ️",
     LogLevel.WARNING: "⚠️",
     LogLevel.ERROR: "☠️",
 }
@@ -55,7 +55,7 @@ class Logger:
         text.append(f"[{self.basename}] ", style="yellow")
         if self.add_timestamp:
             text.append(f"[{datetime.now().strftime('%H:%M:%S')}] ", style="blue")
-        if log_level.value <= self.instance_log_level_int:
+        if log_level.value >= self.instance_log_level_int:
             if isinstance(message, dict):
                 text.append("\n" + json.dumps(message), style="green")
             else:
