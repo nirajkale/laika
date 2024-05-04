@@ -15,6 +15,7 @@ import time
 import cv2
 import colorsys
 from PIL import Image
+from collections import OrderedDict, namedtuple
 
 # region Attempt ML framework imports
 FLAG_ONNX_AVAILABLE = False
@@ -175,7 +176,7 @@ class BaseDetector(ABC):
         # img is of type float64 & has shape (3, image_size[0], image_size[1]), so need to convert to float32 & add a batch dimension
         img = np.expand_dims(img, axis=0).astype("float32")
         preds = self.forward(img)
-        self.logger.debug(f"Predictions Shape: {preds.shape}")
+        self.logger.debug(f"Predictions Shape: {preds.shape} | Type: {preds.dtype}")
         nms_preds = non_max_suppression(
             preds,
             conf_thres=self.conf_thres,
@@ -238,6 +239,55 @@ class ONNXDetector(BaseDetector):
         y = self.sess.run([self.output_name], {self.input_name: x})
         y = torch.tensor(y[0])
         return y
+
+
+Binding = namedtuple("Binding", ("name", "dtype", "shape", "data", "ptr"))
+
+
+class TensorRTDetector(BaseDetector):
+
+    trt_logger = trt.Logger(trt.Logger.INFO)
+
+    def __init__(
+        self,
+        model_path: str,
+        classes: List[str],
+        image_size: Tuple[int] = (640, 640),
+        *args,
+        **kwargs,
+    ) -> None:
+        super().__init__(model_path, classes, image_size, *args, **kwargs)
+
+    def load_model(self, model_path: str) -> None:
+        self.logger.debug("Deserializing TensorRT engine")
+        with open(model_path, "rb") as f, trt.Runtime(self.trt_logger) as runtime:
+            model = runtime.deserialize_cuda_engine(f.read())
+        self.bindings = OrderedDict()
+        for index in range(model.num_bindings):
+            name = model.get_binding_name(index)
+            dtype = trt.nptype(model.get_binding_dtype(index))
+            shape = tuple(model.get_binding_shape(index))
+            data = torch.from_numpy(np.empty(shape, dtype=np.dtype(dtype))).to(
+                self.device
+            )
+            self.bindings[name] = Binding(
+                name, dtype, shape, data, int(data.data_ptr())
+            )
+            self.logger.debug(f"Binding: {name} | dtype: {dtype} | shape: {shape}")
+        self.context = model.create_execution_context()
+        self.logger.debug("Tensorrt engine formalities completed")
+
+    def forward(self, x: np.ndarray) -> torch.Tensor:
+        x = np.ascontiguousarray(x)
+        x = torch.from_numpy(x).to(self.device)
+        x = x.half() if self.half else x.float()  # uint8 to fp16/32
+        assert x.shape == self.bindings["images"].shape, (
+            x.shape,
+            self.bindings["images"].shape,
+        )
+        self.binding_addrs["images"] = int(x.data_ptr())
+        self.context.execute_v2(list(self.binding_addrs.values()))
+        return self.bindings["output0"].data
 
 
 if __name__ == "__main__":
