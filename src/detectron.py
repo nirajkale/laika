@@ -248,7 +248,7 @@ Binding = namedtuple("Binding", ("name", "dtype", "shape", "data", "ptr"))
 
 class TensorRTDetector(BaseDetector):
 
-    trt_logger = trt.Logger(trt.Logger.INFO)
+    # trt_logger = trt.Logger(trt.Logger.INFO)
 
     def __init__(
         self,
