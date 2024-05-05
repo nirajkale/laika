@@ -178,7 +178,7 @@ class BaseDetector(ABC):
         # img is of type float64 & has shape (3, image_size[0], image_size[1]), so need to convert to float32 & add a batch dimension
         img = np.expand_dims(img, axis=0).astype("float32")
         preds = self.forward(img)
-        self.logger.debug(f"Predictions Shape: {preds.shape} | Type: {preds.dtype}")
+        # self.logger.debug(f"Predictions Shape: {preds.shape} | Type: {preds.dtype}")
         nms_preds = non_max_suppression(
             preds,
             conf_thres=self.conf_thres,

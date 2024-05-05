@@ -6,9 +6,14 @@ A repository for all the code related to robot dog: Laika
 
 gst-launch-1.0 avfvideosrc ! videoconvert ! video/x-raw,format=BGR,width=640,height=480,framerate=15/1 ! autovideosink
 
-# receive video from udp source
+# receive video from udp source (BGR)
 
 gst-launch-1.0 -v udpsrc port=5004 caps = "application/x-rtp, media=(string)video, clock-rate=(int)90000, encoding-name=(string)H264, payload=(int)96" ! rtph264depay ! decodebin ! videoconvert ! autovideosink
+
+# receive video from udp source (RGB)
+
+gst-launch-1.0 -v udpsrc port=5004 caps="application/x-rtp, media=(string)video, clock-rate=(int)90000, encoding-name=(string)H264, payload=(int)96" ! rtph264depay ! decodebin ! videoconvert ! video/x-raw, format=(string)RGB ! autovideosink
+
 
 # stream mac webcam to appsink
 
