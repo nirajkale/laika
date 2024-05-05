@@ -31,7 +31,7 @@ def writer_pipeline(
     width: str,
     height: str,
     port: str = "5004",
-    framerate: str = "24",
+    framerate: str = "24"
 ):
     return f"appsrc ! video/x-raw,format=BGR ! queue ! videoconvert ! video/x-raw,format=BGRx ! nvvidconv ! \
     video/x-raw(memory:NVMM),format=NV12,width={width},height={height},framerate={framerate}/1 ! nvv4l2h264enc insert-sps-pps=1 \
