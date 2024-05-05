@@ -248,8 +248,6 @@ Binding = namedtuple("Binding", ("name", "dtype", "shape", "data", "ptr"))
 
 class TensorRTDetector(BaseDetector):
 
-    # trt_logger = trt.Logger(trt.Logger.INFO)
-
     def __init__(
         self,
         model_path: str,
@@ -258,6 +256,7 @@ class TensorRTDetector(BaseDetector):
         *args,
         **kwargs,
     ) -> None:
+        self.trt_logger = trt.Logger(trt.Logger.INFO)
         super().__init__(model_path, classes, image_size, *args, **kwargs)
 
     def load_model(self, model_path: str) -> None:
