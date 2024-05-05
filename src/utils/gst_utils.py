@@ -40,4 +40,4 @@ def writer_pipeline(
 
 if __name__ == "__main__":
 
-    print(writer_pipeline(host_ip_addr="192.168.1.1"))
+    print(writer_pipeline(host_ip_addr="192.168.1.1", width=649, height=640))

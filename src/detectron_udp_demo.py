@@ -66,6 +66,7 @@ if __name__ == "__main__":
             fps = round(1 / (new_frame_time - prev_frame_time), 2)
             prev_frame_time = new_frame_time
             img1, detections = detector.predict(source=frame, isBGR=True)
+            img1 = cv2.cvtColor(img1, cv2.COLOR_RGB2BGR)
             frame = cv2.putText(
                 img1,
                 f"FPS: {fps:.2f} | Det {len(detections)}",
@@ -85,3 +86,5 @@ if __name__ == "__main__":
     finally:
         if cap.isOpened():
             cap.release()
+        if out.isOpened():
+            out.release()
