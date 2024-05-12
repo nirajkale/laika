@@ -40,7 +40,7 @@ if __name__ == "__main__":
         width=WIDTH,
         height=HEIGHT,
         port="5004",
-        framerate=FRAME_RATE
+        framerate=FRAME_RATE,
     )
     out = cv2.VideoWriter(
         writer_pipeline_str,
@@ -48,7 +48,7 @@ if __name__ == "__main__":
         0,
         float(FRAME_RATE),
         (WIDTH, HEIGHT),
-        True
+        True,
     )
     cap = cv2.VideoCapture(reader_pipeline_str, cv2.CAP_GSTREAMER)
     prev_frame_time = 0
@@ -65,11 +65,13 @@ if __name__ == "__main__":
             new_frame_time = time.time()
             fps = round(1 / (new_frame_time - prev_frame_time), 2)
             prev_frame_time = new_frame_time
-            img1, detections = detector.predict(source=frame, isBGR=True)
+            img1, detections, latency_info = detector.predict(source=frame, isBGR=True)
             img1 = cv2.cvtColor(img1, cv2.COLOR_RGB2BGR)
+            screen_augmentation_str = f"FPS: {fps:.2f} | Det {len(detections)} | Pre: {latency_info.preprocessing_latency_ms} \
+                | Inf: {latency_info.inference_latency_ms} | Post: {latency_info.postprocessing_latency_ms} ms"
             frame = cv2.putText(
                 img1,
-                f"FPS: {fps:.2f} | Det {len(detections)}",
+                screen_augmentation_str,
                 (10, 50),
                 cv2.FONT_HERSHEY_SIMPLEX,
                 1,

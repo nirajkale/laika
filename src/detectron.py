@@ -42,6 +42,29 @@ except ImportError:
 # endregion
 
 
+class LatencyInfo:
+
+    def __init__(self) -> None:
+        self.preprocessing_latency_ms = None
+        self.inference_latency_ms = None
+        self.postprocessing_latency_ms = None
+        self.total_latency_ms = None
+        self.start_time = time.time()
+        self.last_timestamp = time.time()
+
+    def mark_preprcessing_complete(self):
+        self.preprocessing_latency_ms = int((time.time() - self.last_timestamp) * 1000)
+        self.last_timestamp = time.time()
+
+    def mark_inference_complete(self):
+        self.inference_latency_ms = int((time.time() - self.last_timestamp) * 1000)
+        self.last_timestamp = time.time()
+
+    def mark_postprocessing_complete(self):
+        self.postprocessing_latency_ms = int((time.time() - self.last_timestamp) * 1000)
+        self.total_latency_ms = int((time.time() - self.start_time) * 1000)
+
+
 class BaseDetector(ABC):
 
     def __init__(
@@ -68,7 +91,7 @@ class BaseDetector(ABC):
         self.half = kwargs.get("half", None)
         self.iou_thres = kwargs.get("iou_thres", 0.45)
         self.agnostic_nms = kwargs.get("agnostic_nms", False)
-        self.max_detections = kwargs.get("max_detections", 50)
+        self.max_detections = kwargs.get("max_detections", 10)
         self.warn = kwargs.get("warn", True)
         self.warmup = kwargs.get("warmup", True)
         self.half = kwargs.get("half", None)
@@ -159,7 +182,8 @@ class BaseDetector(ABC):
         isBGR: bool = False,
         *args,
         **kwargs,
-    ) -> None:
+    ) -> Tuple[np.ndarray, List[Detection], LatencyInfo]:
+        latency_info = LatencyInfo()
         original_image = None
         scaled_inference = False
         img0 = cv2.imread(source) if isinstance(source, str) else source
@@ -177,7 +201,9 @@ class BaseDetector(ABC):
         img = img.transpose((2, 0, 1)) / 255  # HWC to CHW
         # img is of type float64 & has shape (3, image_size[0], image_size[1]), so need to convert to float32 & add a batch dimension
         img = np.expand_dims(img, axis=0).astype("float32")
+        latency_info.mark_preprcessing_complete()
         preds = self.forward(img)
+        latency_info.mark_inference_complete()
         # self.logger.debug(f"Predictions Shape: {preds.shape} | Type: {preds.dtype}")
         nms_preds = non_max_suppression(
             preds,
@@ -186,10 +212,13 @@ class BaseDetector(ABC):
             agnostic=self.agnostic_nms,
             max_det=self.max_detections,
         )[0]
+        result = None
         if scaled_inference:
             nms_preds[:, :4] = scale_boxes(img.shape[2:], nms_preds[:, :4], img0.shape)
-            return self.draw_and_collect_bbox(original_image, nms_preds)
-        return self.draw_and_collect_bbox(img0, nms_preds)
+            result = self.draw_and_collect_bbox(original_image, nms_preds)
+        result = self.draw_and_collect_bbox(img0, nms_preds)
+        latency_info.mark_postprocessing_complete()
+        return result + (latency_info,)
 
     @staticmethod
     def save_np_image(image, output_path):
