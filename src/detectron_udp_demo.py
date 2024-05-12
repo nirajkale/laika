@@ -20,6 +20,7 @@ if __name__ == "__main__":
     HOST_IP_ADDR = "192.168.3.2"
     os.environ["LOG_LEVEL"] = "DEBUG"
     model_path = os.path.join(root_dir, "models/det-5n-half.engine")
+    # model_path = os.path.join(root_dir, "models/det-5n-int8.engine")
     print("model_path:", model_path)
     classes = ["face", "human"]
 
@@ -64,6 +65,7 @@ if __name__ == "__main__":
                 break
             new_frame_time = time.time()
             fps = round(1 / (new_frame_time - prev_frame_time), 2)
+            iteration_delay_ms = int((new_frame_time - prev_frame_time) * 1000)
             prev_frame_time = new_frame_time
             img1, detections, latency_info = detector.predict(source=frame, isBGR=True)
             img1 = cv2.cvtColor(img1, cv2.COLOR_RGB2BGR)

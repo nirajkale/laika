@@ -358,14 +358,15 @@ class TensorRTDetector(BaseDetector):
 if __name__ == "__main__":
 
     environ["LOG_LEVEL"] = "DEBUG"
-    model_path = r"/home/niraj/projects/laika/models/det-5n-half.engine"
+    # model_path = r"/home/niraj/projects/laika/models/det-5n-half.engine"
+    model_path = r"/home/niraj/projects/laika/models/det-5n-int8.engine"
     classes = ["face", "human"]
     sample_image = r"data/samples/9.jpg"
     output_file = r"data/outputs/9_op.jpg"
     # Create an instance of ONNXDetector
     # detector = ONNXDetector(model_path=model_path, classes=classes, device="cpu")
     detector = TensorRTDetector(model_path=model_path, classes=classes, device=0)
-    img1, detections = detector.predict(source=sample_image, isBGR=True)
+    img1, detections, latency_info = detector.predict(source=sample_image, isBGR=True)
     detector.save_np_image(img1, output_file)
     detector.save_np_image(img1, output_file)
     print("done")

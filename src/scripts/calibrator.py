@@ -9,7 +9,6 @@ import pycuda.autoinit
 import numpy as np
 import ctypes
 import logging
-import util_trt
 
 logger = logging.getLogger(__name__)
 ctypes.pythonapi.PyCapsule_GetPointer.restype = ctypes.c_char_p

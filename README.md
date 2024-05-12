@@ -18,3 +18,9 @@ gst-launch-1.0 -v udpsrc port=5004 caps="application/x-rtp, media=(string)video,
 # stream mac webcam to appsink
 
 gst-launch-1.0 -e nvarguscamerasrc ! 'video/x-raw(memory:NVMM), width=(int)640, height=(int)640, format=(string)NV12, framerate=12/1' ! nvvidconv ! 'video/x-raw(memory:NVMM), format=NV12' ! nvv4l2h264enc insert-sps-pps=true ! h264parse ! rtph264pay pt=96 ! udpsink host=192.168.3.2 port=5004 auto-multicast=true sync=false
+
+
+half inference: 50ms
+int8 inference: 70ms
+
+total iter latency (with half)=100ms

@@ -28,7 +28,7 @@ class DataLoader:
         self.length = limit
         self.batch_size = batch_size
         # self.img_list = [i.strip() for i in open('calib.txt').readlines()]
-        self.img_list = glob.glob(os.path.join(image_dir, "*.jpg"))
+        self.img_list = glob(os.path.join(image_dir, "*.jpg"))
         assert len(self.img_list) > self.batch_size * self.length, (
             "{} must contains more than ".format(limit)
             + str(self.batch_size * self.length)
@@ -69,8 +69,9 @@ if __name__ == "__main__":
     width = 640
     ONE_GB_IN_BYTES = 1024 * 1024 * 1024
     prefix = "TensorRT:"
-    f_onnx = r"models/det-5n-int8.onnx"
-    image_dir = "data/calib"
+    f_onnx = r"models/det-5n.onnx"
+    image_dir = "data/samples/train/images"
+    assert os.path.exists(image_dir)
 
     # region common logic
     print("Input:", f_onnx)
@@ -119,7 +120,7 @@ if __name__ == "__main__":
     config.set_flag(trt.BuilderFlag.INT8)
     data_loader = DataLoader(image_dir, batch_size=1, limit=50)
     calibrator = Calibrator(stream=data_loader, cache_file="calib.cache")
-    config.set_int8_calibrator(calibrator)
+    config.int8_calibrator = calibrator
     print("writing engine file")
     # Write file
     build = builder.build_serialized_network if is_trt10 else builder.build_engine
