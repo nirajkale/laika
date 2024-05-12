@@ -219,6 +219,51 @@ class BaseDetector(ABC):
         result = self.draw_and_collect_bbox(img0, nms_preds)
         latency_info.mark_postprocessing_complete()
         return result + (latency_info,)
+    
+
+    def predict_optimized(
+        self,
+        source: Union[str, np.ndarray],
+        isBGR: bool = False,
+        *args,
+        **kwargs,
+    ) -> Tuple[np.ndarray, List[Detection], LatencyInfo]:
+        latency_info = LatencyInfo()
+        original_image = None
+        scaled_inference = False
+        img0 = cv2.imread(source) if isinstance(source, str) else source
+        if isBGR:
+            img0 = cv2.cvtColor(img0, cv2.COLOR_BGR2RGB)
+        if img0.shape[:2] != self.image_size:
+            scaled_inference = True
+            original_image = np.copy(img0)
+            if self.warn:
+                self.logger.warning(
+                    "Image is being shaped, check gstreamer pipeline settings"
+                )
+            img0, _, _ = reshape_image(img0, new_shape=self.image_size, stride=32)
+        img = np.copy(img0)
+        img = img.transpose((2, 0, 1)) / 255  # HWC to CHW
+        # img is of type float64 & has shape (3, image_size[0], image_size[1]), so need to convert to float32 & add a batch dimension
+        img = np.expand_dims(img, axis=0).astype("float32")
+        latency_info.mark_preprcessing_complete()
+        preds = self.forward(img)
+        latency_info.mark_inference_complete()
+        # self.logger.debug(f"Predictions Shape: {preds.shape} | Type: {preds.dtype}")
+        nms_preds = non_max_suppression(
+            preds,
+            conf_thres=self.conf_thres,
+            iou_thres=self.iou_thres,
+            agnostic=self.agnostic_nms,
+            max_det=self.max_detections,
+        )[0]
+        result = None
+        if scaled_inference:
+            nms_preds[:, :4] = scale_boxes(img.shape[2:], nms_preds[:, :4], img0.shape)
+            result = self.draw_and_collect_bbox(original_image, nms_preds)
+        result = self.draw_and_collect_bbox(img0, nms_preds)
+        latency_info.mark_postprocessing_complete()
+        return result + (latency_info,)
 
     @staticmethod
     def save_np_image(image, output_path):

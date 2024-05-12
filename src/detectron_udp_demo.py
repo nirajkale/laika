@@ -1,12 +1,11 @@
 """Uses src/detectron to detect objects in a webcam feed."""
-
 import os
 import cv2
 import numpy as np
 from utils.gst_utils import *
 import time
 from rich.console import Console, Text
-
+root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if __package__:
     from .detectron import BaseDetector, TensorRTDetector
 else:
@@ -20,7 +19,8 @@ if __name__ == "__main__":
     FRAME_RATE = 10
     HOST_IP_ADDR = "192.168.3.2"
     os.environ["LOG_LEVEL"] = "DEBUG"
-    model_path = r"/home/niraj/projects/laika/models/det-5n-half.engine"
+    model_path = os.path.join(root_dir, "models/det-5n-half.engine")
+    print("model_path:", model_path)
     classes = ["face", "human"]
 
     console = Console(emoji=True)
@@ -67,8 +67,7 @@ if __name__ == "__main__":
             prev_frame_time = new_frame_time
             img1, detections, latency_info = detector.predict(source=frame, isBGR=True)
             img1 = cv2.cvtColor(img1, cv2.COLOR_RGB2BGR)
-            screen_augmentation_str = f"FPS: {fps:.2f} | Det {len(detections)} | Pre: {latency_info.preprocessing_latency_ms} \
-                | Inf: {latency_info.inference_latency_ms} | Post: {latency_info.postprocessing_latency_ms} ms"
+            screen_augmentation_str = f"FPS: {fps:.2f} | Lat: {latency_info.preprocessing_latency_ms}, {latency_info.inference_latency_ms}, {latency_info.postprocessing_latency_ms} ms"
             frame = cv2.putText(
                 img1,
                 screen_augmentation_str,
