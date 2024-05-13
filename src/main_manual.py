@@ -2,11 +2,7 @@ import pygame
 import os
 import Jetson.GPIO as GPIO
 from adafruit_servokit import ServoKit
-
-if __package__:
-    from .controller import XboxController, JoystickAxisControl, JoystickAccumulator
-else:
-    from .controller import XboxController, JoystickAxisControl, JoystickAccumulator
+from utils.controller import XboxController, JoystickAxisControl, JoystickAccumulator
 
 clock = pygame.time.Clock()
 joysticks = []
