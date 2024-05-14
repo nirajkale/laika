@@ -36,6 +36,7 @@ UTF_EMOJI_MAP = {
 
 
 class Logger:
+    
     def __init__(
         self,
         basename: str,

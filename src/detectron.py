@@ -319,6 +319,11 @@ class TensorRTDetector(BaseDetector):
         *args,
         **kwargs,
     ) -> None:
+        kwargs.update(
+            {
+                "basename": "TensorRTDetector",
+            }
+        )
         self.trt_logger = trt.Logger(trt.Logger.INFO)
         super().__init__(model_path, classes, image_size, *args, **kwargs)
 
