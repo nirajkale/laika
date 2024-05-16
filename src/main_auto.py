@@ -16,8 +16,8 @@ from typing import Callable, List, Tuple
 import math
 
 os.environ["LOG_LEVEL"] = "DEBUG"
-YAW_CENTER = int(0.5 * 130)
-PITCH_CENTER = int(0.5 * 180)
+YAW_CENTER = int(0.5 * 180)
+PITCH_CENTER = int(0.5 * 130)
 
 
 def get_unified_logger(
@@ -144,14 +144,14 @@ def main(*args, **kwargs):
                 source=frame, isBGR=True
             )
             img_out = cv2.cvtColor(img_out, cv2.COLOR_RGB2BGR)
-            new_position = process_detections(detections, last_pos=position)
+            new_position = process_detections(detections, last_pos=position, beta1=kwargs['servo_beta1'])
             set_servo_position(servo_kit, new_position, last_pos=position)
             position = new_position
             img_out = draw_text_on_image(
                 img_out,
                 text=f"FPS: {fps:.1f} | P:{new_position.pitch_target}, y:{new_position.yaw_target}",
                 point=(10, 50),
-                color=Color.dark_green,
+                color=Color.green,
             )
             out.write(img_out)
             # disp.print_line(f"FPS: {fps:.2f}", clear=False, line_num=1)
@@ -188,7 +188,7 @@ if __name__ == "__main__":
         "warmup": True,
         "conf_thres": 0.25,
         "iou_thres": 0.45,
-        "servo_beta1": 0.75,
+        "servo_beta1": 0.65,
     }
 
     main(**config)
