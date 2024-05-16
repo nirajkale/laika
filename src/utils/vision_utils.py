@@ -13,12 +13,14 @@ else:
 import time
 from enum import Enum
 
+
 class Color(Enum):
 
-    green       = (0, 255, 0)
-    dark_green  = (0, 102, 0)
-    violet      = (153, 0, 255)
-    pink        = (204, 0, 102)
+    green = (0, 255, 0)
+    dark_green = (0, 102, 0)
+    violet = (153, 0, 255)
+    pink = (204, 0, 102)
+
 
 class Detection:
 
@@ -344,15 +346,15 @@ def scale_boxes(
 def draw_text_on_image(
     image: np.ndarray,
     text: str,
-    position: Tuple[int, int],
-    fontScale:int=1,
+    point: Tuple[int, int],
+    fontScale: int = 1,
     color: Color = Color.dark_green,
-    thickness: int=2
+    thickness: int = 2,
 ):
     return cv2.putText(
         image,
         text,
-        position, # (10, 50),
+        point,  # (10, 50),
         cv2.FONT_HERSHEY_SIMPLEX,
         fontScale,
         color.value,
