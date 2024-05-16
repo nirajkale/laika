@@ -6,6 +6,7 @@ from utils.display_utils import DisplayManager
 from utils.gst_utils import get_video_capture, get_video_writer
 from utils.logger import Logger, LogLevel
 from utils.hardware_utils import Position
+from utils.vision_utils import draw_text_on_image
 from rich.console import Console, Text
 from detectron import BaseDetector, TensorRTDetector
 import gc
@@ -35,6 +36,7 @@ def process_detections(detections: List[Detection], last_pos: Position, beta1: f
     if not obj:
         return last_pos
     obj.normalize_dims()
+    pitch_target = 
     # servo_h = int(abs(obj.center_x - 0.5) * 180 * beta1)
     # servo_v = int(abs(obj.center_y - 0.5) * 130 * beta1)
     servo_h = int(obj.center_x * 180)
@@ -103,21 +105,16 @@ def main(*args, **kwargs):
             fps = round(1 / (new_frame_time - prev_frame_time), 2)
             # iteration_delay_ms = int((new_frame_time - prev_frame_time) * 1000)
             prev_frame_time = new_frame_time
-            img1, detections, latency_info = detector.predict(source=frame, isBGR=True)
-            img1 = cv2.cvtColor(img1, cv2.COLOR_RGB2BGR)
+            img_out, detections, latency_info = detector.predict(source=frame, isBGR=True)
+            img_out = cv2.cvtColor(img_out, cv2.COLOR_RGB2BGR)
             position = process_detections(detections, last_pos=position)
-            screen_augmentation_str = f"FPS: {fps:.1f} | x:{position.servo_v}, y:{position.servo_v}"
-            frame = cv2.putText(
-                img1,
-                screen_augmentation_str,
-                (10, 50),
-                cv2.FONT_HERSHEY_SIMPLEX,
-                1,
-                (0, 255, 0),
-                2,
-                cv2.LINE_AA,
-            )
-            out.write(frame)
+            img_out = draw_text_on_image(img_out, \
+                                        text=f"FPS: {fps:.1f} | x:{position.servo_h}, y:{position.servo_v}", \
+                                        position=(10, 50))
+            img_out = draw_text_on_image(img_out, \
+                                        text=screen_augmentation_str, \
+                                        position=(10, 50))
+            out.write(img_out)
             # disp.print_line(f"FPS: {fps:.2f}", clear=False, line_num=1)
             if cv2.waitKey(1) & 0xFF == ord("q"):
                 break

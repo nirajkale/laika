@@ -7,8 +7,10 @@ class Position:
 
     x: float
     y: float
-    servo_v: int
-    servo_h: int
+    pitch_target: int
+    yaw_target: int
+    pitch_pred: int
+    yaw_pred: int
 
 def configure_pwm_pair(servo_kit: ServoKit, pin_on: int, pin_off:int, pwm_amgle:int):
     servo_kit.servo[pin_on].angle = pwm_amgle

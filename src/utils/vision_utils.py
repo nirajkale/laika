@@ -4,14 +4,21 @@ from typing import Tuple
 import torch
 import warnings
 import colorsys
-from typing import List
+from typing import List, Tuple
 
 if __package__:
     from .metrics import batch_probiou
 else:
     from metrics import batch_probiou
 import time
+from enum import Enum
 
+class Color(Enum):
+
+    green       = (0, 255, 0)
+    dark_green  = (0, 102, 0)
+    violet      = (153, 0, 255)
+    pink        = (204, 0, 102)
 
 class Detection:
 
@@ -332,3 +339,23 @@ def scale_boxes(
             boxes[..., 3] -= pad[1]  # y padding
     boxes[..., :4] /= gain
     return clip_boxes(boxes, img0_shape)
+
+
+def draw_text_on_image(
+    image: np.ndarray,
+    text: str,
+    position: Tuple[int, int],
+    fontScale:int=1,
+    color: Color = Color.dark_green,
+    thickness: int=2
+):
+    return cv2.putText(
+        image,
+        text,
+        position, # (10, 50),
+        cv2.FONT_HERSHEY_SIMPLEX,
+        fontScale,
+        color.value,
+        thickness,
+        cv2.LINE_AA,
+    )
